@@ -2,12 +2,15 @@ package com.lees.doctorwho.security;
 
 import com.auth0.jwt.JWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.lees.doctorwho.entity.ApplicationUser;
 import lombok.AllArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -18,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import static com.auth0.jwt.algorithms.Algorithm.HMAC512;
 import static com.lees.doctorwho.security.SecurityConstants.EXPIRATION_TIME;
@@ -46,10 +50,13 @@ public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     @Override
     protected void successfulAuthentication(final HttpServletRequest request, final HttpServletResponse response,
                                             final FilterChain chain, final Authentication auth) {
-
+        String authorities = auth.getAuthorities().stream().
+            map(GrantedAuthority::getAuthority).collect(Collectors.joining(","));
         String token = JWT.create().withSubject(((User) auth.getPrincipal()).getUsername()).
             withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_TIME)).
+            withClaim("scopes", authorities).
             sign(HMAC512(SECRET.getBytes()));
+        auth.getAuthorities().iterator().next().getAuthority();
         response.addHeader(HEADER_STRING, TOKEN_PREFIX + token);
     }
 }
