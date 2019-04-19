@@ -40,6 +40,9 @@ public class CompanionController {
         CompanionWithIdModel companionModel = new CompanionWithIdModel();
         companionModel.setId(companion.getId());
         companionModel.setName(companion.getName());
+        companionModel.setDescription(companion.getDescription());
+        companionModel.setPhotoUrl(companion.getPhotoUrl());
+        companionModel.setAvatarUrl(companion.getAvatarUrl());
         List<Doctor> doctors = companion.getDoctors();
         companionModel.setDoctorIds(doctors.stream().map(d -> d.getId()).collect(Collectors.toSet()));
         return companionModel;

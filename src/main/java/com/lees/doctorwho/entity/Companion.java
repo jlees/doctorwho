@@ -21,6 +21,14 @@ public class Companion {
 
     private String name;
 
+    private String description;
+
+    @Column(name = "photo_url")
+    private String photoUrl;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @ManyToMany(mappedBy="companions", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @Setter(AccessLevel.NONE)
     private List<Doctor> doctors = new ArrayList<>();
