@@ -20,6 +20,8 @@ public class Doctor {
 
     private String name;
 
+    private int sortOrder;
+
     @ManyToMany
     @JoinTable(name = "doctor_companion_xref",
             joinColumns = { @JoinColumn(name = "doctor_id") },

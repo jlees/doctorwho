@@ -32,7 +32,7 @@ public class DoctorController {
 
     @GetMapping
     public List<DoctorWithIdModel> getDoctors() {
-        List<Doctor> doctors = doctorRepository.findAll();
+        List<Doctor> doctors = doctorRepository.findAllByOrderBySortOrderAsc();
         return doctors.stream().map(doctor -> {
             DoctorWithIdModel model = new DoctorWithIdModel();
             model.setId(doctor.getId());
