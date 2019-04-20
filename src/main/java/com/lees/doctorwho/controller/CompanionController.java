@@ -5,7 +5,6 @@ import com.lees.doctorwho.model.CompanionWithIdModel;
 import com.lees.doctorwho.service.CompanionService;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,12 +23,11 @@ import java.util.Set;
 @AllArgsConstructor
 public class CompanionController {
 
-    @Autowired
     private CompanionService companionService;
 
     @PostMapping
-    public void addCompanion(@ApiParam(name="companion") @Valid @RequestBody final CompanionModel companionModel) {
-        companionService.addCompanion(companionModel);
+    public CompanionWithIdModel addCompanion(@ApiParam(name="companion") @Valid @RequestBody final CompanionModel companionModel) {
+        return companionService.addCompanion(companionModel);
     }
 
     @GetMapping
@@ -43,9 +41,9 @@ public class CompanionController {
     }
 
     @PutMapping("/{companionId}")
-    public void editCompanion(@PathVariable final long companionId,
+    public CompanionWithIdModel editCompanion(@PathVariable final long companionId,
                               @ApiParam(name="companion") @Valid @RequestBody final CompanionModel companionModel) {
-        companionService.editCompanion(companionId, companionModel);
+        return companionService.editCompanion(companionId, companionModel);
     }
 
     @DeleteMapping("/{companionId}")

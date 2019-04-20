@@ -42,7 +42,7 @@ public class Companion {
 
     @ToString.Exclude
     @Setter(AccessLevel.NONE)
-    @OneToMany(mappedBy = "companion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy="companion", cascade=CascadeType.ALL, orphanRemoval=true, fetch=FetchType.EAGER)
     private List<DoctorCompanionXref> doctorCompanionXrefList = new ArrayList<>();
 
     public List<Doctor> getDoctors() {
@@ -84,7 +84,7 @@ public class Companion {
         DoctorCompanionXref[] doctorCompanionXrefs = this.doctorCompanionXrefList.toArray(new DoctorCompanionXref[0]);
         for (DoctorCompanionXref doctorCompanionXref : doctorCompanionXrefs) {
             doctorCompanionXref.getDoctor().removeCompanion(doctorCompanionXref.getCompanion());
-            this.doctorCompanionXrefList.remove(doctorCompanionXrefs);
+            this.doctorCompanionXrefList.remove(doctorCompanionXref);
         }
     }
 

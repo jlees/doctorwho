@@ -7,10 +7,8 @@ import com.lees.doctorwho.model.CompanionModel;
 import com.lees.doctorwho.model.CompanionWithIdModel;
 import com.lees.doctorwho.repository.CompanionRepository;
 import com.lees.doctorwho.repository.DoctorRepository;
-import io.swagger.annotations.ApiParam;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.HashSet;
 import java.util.List;
@@ -19,17 +17,31 @@ import java.util.stream.Collectors;
 
 
 @Service
+@AllArgsConstructor
 public class CompanionService {
 
-    @Autowired
     private CompanionRepository companionRepository;
 
-    @Autowired
     private DoctorRepository doctorRepository;
 
-    public void addCompanion(final CompanionModel companionModel) {
+    public CompanionWithIdModel addCompanion(final CompanionModel companionModel) {
         Companion companion = new Companion();
+        updateCompanionWithModel(companion, companionModel);
+        return buildCompanionModel(companion);
+    }
+
+    public CompanionWithIdModel editCompanion(final long companionId, final CompanionModel companionModel) {
+        Companion existingCompanion = findCompanionById(companionId);
+        updateCompanionWithModel(existingCompanion, companionModel);
+        return buildCompanionModel(existingCompanion);
+    }
+
+    private void updateCompanionWithModel(final Companion companion, final CompanionModel companionModel) {
         companion.setName(companionModel.getName());
+        companion.setAvatarUrl(companionModel.getAvatarUrl());
+        companion.setPhotoUrl(companionModel.getPhotoUrl());
+        companion.setDescription(companionModel.getDescription());
+        companion.removeAllDoctors();
         List<Doctor> doctors = doctorRepository.findAllById(companionModel.getDoctorIds());
         for (Doctor doctor : doctors) {
             companion.addDoctor(doctor);
@@ -37,22 +49,9 @@ public class CompanionService {
         companionRepository.save(companion);
     }
 
-    public void editCompanion(final long companionId, final CompanionModel companionModel) {
-        Companion existingCompanion = findCompanionById(companionId);
-        existingCompanion.setName(companionModel.getName());
-        existingCompanion.setAvatarUrl(companionModel.getAvatarUrl());
-        existingCompanion.setPhotoUrl(companionModel.getPhotoUrl());
-        existingCompanion.setDescription(companionModel.getDescription());
-        existingCompanion.removeAllDoctors();
-        List<Doctor> doctors = doctorRepository.findAllById(companionModel.getDoctorIds());
-        for (Doctor doctor : doctors) {
-            existingCompanion.addDoctor(doctor);
-        }
-        companionRepository.save(existingCompanion);
-    }
-
     public void deleteCompanion(final long companionId) {
         Companion companion = findCompanionById(companionId);
+        companion.removeAllDoctors();
         companionRepository.delete(companion);
     }
 
@@ -77,7 +76,7 @@ public class CompanionService {
         return companion;
     }
 
-    public CompanionWithIdModel buildCompanionModel(final Companion companion) {
+    private CompanionWithIdModel buildCompanionModel(final Companion companion) {
         CompanionWithIdModel companionModel = new CompanionWithIdModel();
         companionModel.setId(companion.getId());
         companionModel.setName(companion.getName());
@@ -85,7 +84,7 @@ public class CompanionService {
         companionModel.setPhotoUrl(companion.getPhotoUrl());
         companionModel.setAvatarUrl(companion.getAvatarUrl());
         List<Doctor> doctors = companion.getDoctors();
-        companionModel.setDoctorIds(doctors.stream().map(d -> d.getId()).collect(Collectors.toSet()));
+        companionModel.setDoctorIds(doctors.stream().map(Doctor::getId).collect(Collectors.toSet()));
         return companionModel;
     }
 
