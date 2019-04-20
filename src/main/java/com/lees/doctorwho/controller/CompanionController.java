@@ -1,20 +1,22 @@
 package com.lees.doctorwho.controller;
 
-import com.lees.doctorwho.entity.Companion;
-import com.lees.doctorwho.entity.Doctor;
 import com.lees.doctorwho.model.CompanionModel;
 import com.lees.doctorwho.model.CompanionWithIdModel;
-import com.lees.doctorwho.repository.CompanionRepository;
-import com.lees.doctorwho.repository.DoctorRepository;
+import com.lees.doctorwho.service.CompanionService;
 import io.swagger.annotations.ApiParam;
 import lombok.AllArgsConstructor;
-import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashSet;
-import java.util.List;
+import javax.validation.Valid;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 
 @RestController
@@ -22,63 +24,33 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class CompanionController {
 
-    private CompanionRepository companionRepository;
-    private DoctorRepository doctorRepository;
+    @Autowired
+    private CompanionService companionService;
 
     @PostMapping
-    public void addCompanion(@ApiParam(name="companion") @RequestBody CompanionModel companionModel) {
-        Companion companion = new Companion();
-        companion.setName(companionModel.getName());
-        List<Doctor> doctors = doctorRepository.findAllById(companionModel.getDoctorIds());
-         for (Doctor doctor : doctors) {
-            companion.addDoctor(doctor);
-        }
-        companionRepository.save(companion);
-    }
-
-    private CompanionWithIdModel buildCompanionModel(final Companion companion) {
-        CompanionWithIdModel companionModel = new CompanionWithIdModel();
-        companionModel.setId(companion.getId());
-        companionModel.setName(companion.getName());
-        companionModel.setDescription(companion.getDescription());
-        companionModel.setPhotoUrl(companion.getPhotoUrl());
-        companionModel.setAvatarUrl(companion.getAvatarUrl());
-        List<Doctor> doctors = companion.getDoctors();
-        companionModel.setDoctorIds(doctors.stream().map(d -> d.getId()).collect(Collectors.toSet()));
-        return companionModel;
+    public void addCompanion(@ApiParam(name="companion") @Valid @RequestBody final CompanionModel companionModel) {
+        companionService.addCompanion(companionModel);
     }
 
     @GetMapping
     public Set<CompanionWithIdModel> getCompanions() {
-        Set<CompanionWithIdModel> companionModels = new HashSet<>();
-        for (Companion companion : companionRepository.findAll()) {
-            companionModels.add(buildCompanionModel(companion));
-        }
-        return companionModels;
+        return companionService.getCompanions();
     }
 
-    @GetMapping("/{id}")
-    public CompanionWithIdModel getCompanion(@PathVariable long id) {
-        return buildCompanionModel(companionRepository.findById(id).get());
+    @GetMapping("/{companionId}")
+    public CompanionWithIdModel getCompanion(@PathVariable long companionId) {
+        return companionService.getCompanion(companionId);
     }
 
-    @PutMapping("/{id}")
-    public void editCompanion(@PathVariable long id,
-                              @ApiParam(name="companion") @RequestBody CompanionModel companionModel) {
-        Companion existingCompanion = companionRepository.findById(id).get();
-        Assert.notNull(existingCompanion, "Companion not found");
-        existingCompanion.setName(companionModel.getName());
-        existingCompanion.removeAllDoctors();
-        List<Doctor> doctors = doctorRepository.findAllById(companionModel.getDoctorIds());
-        for (Doctor doctor : doctors) {
-            existingCompanion.addDoctor(doctor);
-        }
-        companionRepository.save(existingCompanion);
+    @PutMapping("/{companionId}")
+    public void editCompanion(@PathVariable final long companionId,
+                              @ApiParam(name="companion") @Valid @RequestBody final CompanionModel companionModel) {
+        companionService.editCompanion(companionId, companionModel);
     }
 
-    @DeleteMapping("/{id}")
-    public void deleteCompanion(@PathVariable long id) {
-        Companion companion = companionRepository.findById(id).get();
-        companionRepository.delete(companion);
+    @DeleteMapping("/{companionId}")
+    public void deleteCompanion(@PathVariable final long companionId) {
+        companionService.deleteCompanion(companionId);
     }
+
 }

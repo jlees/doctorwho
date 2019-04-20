@@ -1,14 +1,25 @@
 package com.lees.doctorwho.entity;
 
 
+import com.google.common.collect.Lists;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
+import lombok.ToString;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Entity
@@ -29,33 +40,52 @@ public class Companion {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    @ManyToMany(mappedBy="companions", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ToString.Exclude
     @Setter(AccessLevel.NONE)
-    private List<Doctor> doctors = new ArrayList<>();
+    @OneToMany(mappedBy = "companion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<DoctorCompanionXref> doctorCompanionXrefList = new ArrayList<>();
 
     public List<Doctor> getDoctors() {
-        return Collections.unmodifiableList(this.doctors);
+        Set<Doctor> doctors = new HashSet<>();
+        for (DoctorCompanionXref doctorCompanionXref : this.doctorCompanionXrefList) {
+            doctors.add(doctorCompanionXref.getDoctor());
+        }
+        return Collections.unmodifiableList(Lists.newArrayList(doctors));
     }
 
-    public void addDoctor(Doctor doctor) {
-        if (doctor != null) {
-            this.doctors.add(doctor);
-            doctor.addCompanion(this);
+    private DoctorCompanionXref findDoctorCompanionXrefByDoctor(final Doctor doctor) {
+        if (doctor != null && this.doctorCompanionXrefList != null) {
+            DoctorCompanionXref matchingDoctorCompanionXref = null;
+            for (DoctorCompanionXref doctorCompanionXref : this.doctorCompanionXrefList) {
+                if (doctor.getId() == doctorCompanionXref.getDoctor().getId()) {
+                    return doctorCompanionXref;
+                }
+            }
+        }
+        return null;
+    }
+
+    public void addDoctor(final Doctor doctor) {
+        if (doctor != null && findDoctorCompanionXrefByDoctor(doctor) == null) {
+            this.doctorCompanionXrefList.add(new DoctorCompanionXref(doctor, this));
         }
     }
 
-    public void removeDoctor(Doctor doctor) {
-        if (doctor != null) {
-            this.doctors.remove(doctor);
-            doctor.removeCompanion(this);
+    public void removeDoctor(final Doctor doctor) {
+        if (doctor != null && this.doctorCompanionXrefList != null) {
+            DoctorCompanionXref matchingDoctorCompanionXref = findDoctorCompanionXrefByDoctor(doctor);
+            if (matchingDoctorCompanionXref != null) {
+                this.doctorCompanionXrefList.remove(matchingDoctorCompanionXref);
+            }
         }
     }
 
     public void removeAllDoctors() {
-        for (Doctor doctor : this.doctors) {
-            doctor.removeCompanion(this);
+        DoctorCompanionXref[] doctorCompanionXrefs = this.doctorCompanionXrefList.toArray(new DoctorCompanionXref[0]);
+        for (DoctorCompanionXref doctorCompanionXref : doctorCompanionXrefs) {
+            doctorCompanionXref.getDoctor().removeCompanion(doctorCompanionXref.getCompanion());
+            this.doctorCompanionXrefList.remove(doctorCompanionXrefs);
         }
-        this.doctors.clear();
     }
 
 }
