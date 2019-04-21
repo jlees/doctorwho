@@ -11,10 +11,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.access.channel.ChannelProcessingFilter;
-import org.springframework.security.web.session.SessionManagementFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.context.annotation.Bean;
 
 
@@ -27,8 +23,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 
     @Bean
     CorsFilter corsFilter() {
-        CorsFilter filter = new CorsFilter();
-        return filter;
+        return new CorsFilter();
     }
 
     @Override
@@ -37,6 +32,9 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         http.cors().disable().csrf().disable().authorizeRequests()
                 .antMatchers(HttpMethod.POST, SecurityConstants.LOGIN_URL).permitAll()
                 .antMatchers(HttpMethod.POST, SecurityConstants.SIGN_UP_URL).permitAll()
+                .antMatchers(HttpMethod.POST, "/api/companions").hasAuthority("upsert_companion")
+                .antMatchers(HttpMethod.PUT, "/api/companions/**").hasAuthority("upsert_companion")
+                .antMatchers(HttpMethod.DELETE, "/api/companions/**").hasAuthority("upsert_companion")
                 .antMatchers("/v2/**").permitAll()
                 .antMatchers("/swagger-ui.html").permitAll()
                 .antMatchers("/swagger-resources/**").permitAll()
@@ -48,7 +46,7 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
                 .and()
                 .addFilterBefore(corsFilter(), ChannelProcessingFilter.class)
                 .addFilter(new JWTAuthenticationFilter(authenticationManager))
-                .addFilter(new JWTAuthorizationFilter(authenticationManager))
+                .addFilter(new JWTAuthorizationFilter(authenticationManager, userDetailsService))
                 // this disables session creation on Spring Security
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
