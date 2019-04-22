@@ -30,15 +30,24 @@ public class DoctorController {
         doctorRepository.save(doctor);
     }
 
+    @GetMapping("/{doctorId}")
+    public DoctorWithIdModel getDoctors(@PathVariable long doctorId) {
+        Doctor doctor = doctorRepository.findById(doctorId).orElse(null);
+        return buildDoctorWithIdModel(doctor);
+    }
+
     @GetMapping
     public List<DoctorWithIdModel> getDoctors() {
         List<Doctor> doctors = doctorRepository.findAllByOrderBySortOrderAsc();
-        return doctors.stream().map(doctor -> {
-            DoctorWithIdModel model = new DoctorWithIdModel();
-            model.setId(doctor.getId());
-            model.setName(doctor.getName());
-            return model;
-        }).collect(Collectors.toList());
+        return doctors.stream().map(doctor -> buildDoctorWithIdModel(doctor)).collect(Collectors.toList());
+    }
+
+    private DoctorWithIdModel buildDoctorWithIdModel(final Doctor doctor) {
+        DoctorWithIdModel model = new DoctorWithIdModel();
+        model.setId(doctor.getId());
+        model.setName(doctor.getName());
+        model.setCode(doctor.getCode());
+        return model;
     }
 
     @PutMapping("/{id}")

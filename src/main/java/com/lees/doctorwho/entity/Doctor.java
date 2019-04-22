@@ -29,6 +29,8 @@ public class Doctor {
 
     private String name;
 
+    private String code;
+
     private int sortOrder;
 
     @Setter(AccessLevel.NONE)

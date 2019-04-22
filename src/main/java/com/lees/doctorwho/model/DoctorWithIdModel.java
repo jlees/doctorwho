@@ -8,4 +8,5 @@ import lombok.Setter;
 public class DoctorWithIdModel {
     private long id;
     private String name;
+    private String code;
 }
